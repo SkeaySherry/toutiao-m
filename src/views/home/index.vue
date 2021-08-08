@@ -45,7 +45,11 @@
       close-icon-position="top-left"
     >
       <!-- 把弹层中的内容抽离到一个单独的组件中 -->
-      <channel-edit></channel-edit>
+      <channel-edit
+        :my-channels="channels"
+        :active="active"
+        @update-active="onUpdateActive"
+      ></channel-edit>
     </van-popup>
     <!-- /频道编辑 -->
   </div>
@@ -82,6 +86,16 @@ export default {
       } catch (err) {
         this.$toast('获取频道数据失败')
       }
+    },
+    // 处理子组件触发的自定义事件
+    onUpdateActive(index, isShow) {
+      // 接受传入的弹出层开关状态
+      // console.log('----', index)
+      // 1. 切换 tab 栏, 修改 active 激活项的索引值
+      this.active = index
+
+      // 2. 隐藏弹出层
+      this.isChannelEditShow = isShow
     }
   }
 }
