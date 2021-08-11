@@ -22,10 +22,16 @@
         <!-- 3. 使用文章列表项组件的位置 -->
         <!-- 4. 传递props数据到子组件中 -->
         <article-item
+          v-for="article in list"
+          :key="article.art_id.toString()"
+          :article="article"
+        ></article-item>
+        <!-- <article-item
           v-for="(article, index) in list"
           :key="index"
           :article="article"
-        ></article-item>
+        ></article-item> -->
+
         <!-- <van-cell
           v-for="(item, index) in list"
           :key="index"

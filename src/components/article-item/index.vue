@@ -1,6 +1,16 @@
 <template>
   <!-- 文章列表项 -->
-  <van-cell class="article-item">
+  <!--
+    Cell 单元格的 to 属性和 VueRouter 中的 RouterLink 导航组件的 to 属性用法是一样的
+    用法参考链接：https://router.vuejs.org/zh/api/#to
+    :to="'/article/' + article.art_id"
+    :to="`/article/${article.art_id}`"
+    :to="{ name:'路径名称', params:{ 标识符:数据 } }"
+-->
+  <van-cell
+    class="article-item"
+    :to="{ name: 'article', params: { articleId: article.art_id } }"
+  >
     <!-- 标题 -->
     <template #title>
       <div class="title van-multi-ellipsis--l2">{{ article.title }}</div>

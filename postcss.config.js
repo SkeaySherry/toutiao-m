@@ -18,7 +18,9 @@ module.exports = {
         // 如果是vant的就按照375 尺寸， 如果是其他的就是按照750
         return file.indexOf('vant') !== -1 ? 37.5 : 75 // rootValue 的值一般是 设计稿  1/10
       },
-      propList: ['*']
+      propList: ['*'],
+      // 作用: 排除哪些不需要进行 rem 单位转换的文件
+      exclude: 'github-markdown'
     }
   }
 }

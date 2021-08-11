@@ -33,6 +33,14 @@ const routes = [
         path: '/search',
         name: 'search',
         component: () => import('@/views/search')
+      },
+      {
+        // 动态路由, 根据不同的文章 id 来展示不同的页面内容
+        path: '/article/:articleId',
+        name: 'article',
+        component: () => import('@/views/article'),
+        // 将路由动态参数映射到组件的 props 中，更推荐这种做法
+        props: true
       }
     ]
   },

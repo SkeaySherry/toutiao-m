@@ -3,9 +3,30 @@
 import axios from 'axios'
 import store from '@/store'
 
+// 导入 json-bigint
+import JSONBig from 'json-bigint'
+
+// const jsonStr = '{"art_id": 1234567789907753}'
+
+// console.log(JSON.parse(jsonStr)) // 会丢失精度
+
+// console.log(JSONBig.parse(jsonStr)) // 不会丢失精度, 使用对象来表示大整数数字
+// console.log(JSONBig.parse(jsonStr).art_id.toString())
+
 const request = axios.create({
-  baseURL: 'http://toutiao-app.itheima.net' // 基础路径
+  baseURL: 'http://toutiao-app.itheima.net', // 基础路径
   // baseURL: 'http://192.168.17.27:8000/' // 本地
+  // `transformResponse` 在传递给 then/catch 前，允许修改响应数据
+  transformResponse: [
+    function(data) {
+      // 对 data 进行任意转换处理
+      try {
+        return JSONBig.parse(data)
+      } catch (err) {
+        return data
+      }
+    }
+  ]
 })
 
 // 配置请求拦截器
