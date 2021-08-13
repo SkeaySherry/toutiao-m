@@ -35,20 +35,27 @@
           <div slot="label" class="publish-date">
             {{ article.pubdate | relativeTime }}
           </div>
-          <van-button
-            class="follow-btn"
-            type="info"
-            color="#3296fa"
-            round
-            size="small"
-            icon="plus"
-            >关注</van-button
-          >
-          <!-- <van-button
-            class="follow-btn"
-            round
-            size="small"
-          >已关注</van-button> -->
+
+          <!-- 关注用户组件 -->
+          <!-- <follow-user
+            :is_followed="article.is_followed"
+            :aut_id="article.aut_id"
+            @update_followed="article.is_followed = $event"
+          ></follow-user> -->
+          <!--不传参: @update_followed="!article.is_followed" -->
+
+          <!-- 如果父组件传给子组件的值, 子组件也同步需要修改,这时候可以使用v-model 指令-->
+          <!-- v-model指令相当于 :value 指令 和 @input 指令的集合 -->
+          <!-- <follow-user
+            :value="article.is_followed"
+            :aut_id="article.aut_id"
+            @input="article.is_followed = $event"
+          ></follow-user> -->
+          <!-- 因为 value， input 命名没有语义，所以要自定义修改 v-model 的数据名称-->
+          <follow-user
+            :aut_id="article.aut_id"
+            v-model="article.is_followed"
+          ></follow-user>
         </van-cell>
         <!-- /用户信息 -->
 
@@ -56,29 +63,37 @@
         <div
           class="article-content markdown-body"
           v-html="article.content"
+          ref="article-content"
         ></div>
         <van-divider>正文结束</van-divider>
+        <!-- 评论列表 -->
+        <comment-list></comment-list>
+        <!-- /评论列表 -->
         <!-- 底部区域 -->
         <div class="article-bottom">
-          <van-button class="comment-btn" type="default" round size="small"
-            >写评论</van-button
-          >
+          <van-button class="comment-btn" type="default" round size="small">
+            写评论
+          </van-button>
           <van-icon name="comment-o" info="123" color="#777" />
-          <van-icon color="#777" name="star-o" />
-          <van-icon color="#777" name="good-job-o" />
+          <!-- 收藏 -->
+          <collect-article
+            v-model="article.is_collected"
+            :art_id="article.art_id"
+          />
+          <!-- 点赞 -->
+          <like-article v-model="article.attitude" :art_id="article.art_id" />
+          <!-- 转发 -->
           <van-icon name="share" color="#777777"></van-icon>
         </div>
         <!-- /底部区域 -->
       </div>
       <!-- /加载完成-文章详情 -->
-
       <!-- 加载失败：404 -->
       <div class="error-wrap" v-else-if="errStatus === 404">
         <van-icon name="failure" />
         <p class="text">该资源不存在或已删除！</p>
       </div>
       <!-- /加载失败：404 -->
-
       <!-- 加载失败：其它未知错误（例如网络原因或服务端异常） -->
       <div class="error-wrap" v-else>
         <van-icon name="failure" />
@@ -92,10 +107,28 @@
 
 <script>
 import { getArticleById } from '@/api/article'
-// console.log(getArticleById)
+import { ImagePreview } from 'vant'
+import FollowUser from '@/components/follow-user'
+import CollectArticle from '@/components/collect-article'
+import LikeArticle from '@/components/like-article'
+import CommentList from './components/comment-list.vue'
+
+// ImagePreview({
+//   // 预览的图片数组
+//   images: [
+//     'https://img01.yzcdn.cn/vant/apple-1.jpg',
+//     'https://img01.yzcdn.cn/vant/apple-2.jpg'
+//   ],
+//   // 起始位置 从 0 开始
+//   startPosition: 1,
+//   onClose() {
+//     console.log('关闭')
+//   }
+// })
+
 export default {
   name: 'ArticleIndex',
-  components: {},
+  components: { FollowUser, CollectArticle, LikeArticle, CommentList },
   props: {
     // 使用props解耦获得了的动态路由数据，这样我们就可以使用this.articleId 获取动态路由数据 而不需要使用 this.$route.params.articleId
     // 解耦的好处: 文章组件可以独立使用,不需要依路由进行访问使用
@@ -138,6 +171,20 @@ export default {
 
         // 关闭加载中状态
         this.loading = false
+
+        // 已经获取到了文章数据了 处理图片的预览效果
+
+        // console.log(this.$refs['article-content']) // undefined
+        // 如何去获取异步更新后的DOM内容? ==> (1) this.$nextTick() (2) setTimeout() 模拟
+
+        this.$nextTick(() => {
+          // console.log(this.$refs['article-content'])
+          this.previewImage()
+        })
+
+        // setTimeout(()=>{
+        //   console.log(this.$refs['article-content'])
+        // })
       } catch (err) {
         console.log('获取失败', err)
         // 404 问题 :
@@ -152,6 +199,25 @@ export default {
         // 关闭加载中状态
         this.loading = false
       }
+    },
+    // 实现图片预览 :
+    previewImage() {
+      // (1) 获取到所有的图片
+      const imgs = this.$refs['article-content'].querySelectorAll('img')
+      console.log(imgs)
+      // (2) 把所有图片的地址存放到一个数组中
+      const images = []
+      imgs.forEach((item, index) => {
+        images.push(item.src)
+        // (3) 给图片绑定点击事件
+        item.onclick = () => {
+          // (4) 调用预览函数进行预览
+          ImagePreview({
+            images,
+            startPosition: index
+          })
+        }
+      })
     }
   }
 }
