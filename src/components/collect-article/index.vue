@@ -10,7 +10,7 @@
 
 <script>
 import { addCollect, delCollect } from '@/api/article'
-console.log(addCollect, delCollect)
+// console.log(addCollect, delCollect)
 export default {
   name: 'CollectArticle',
   components: {},

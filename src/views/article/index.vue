@@ -66,26 +66,46 @@
           ref="article-content"
         ></div>
         <van-divider>正文结束</van-divider>
-        <!-- 评论列表 -->
-        <comment-list></comment-list>
-        <!-- /评论列表 -->
+        <!------------------------------------- 评论列表 ---------------------------------->
+        <comment-list
+          :source="article.art_id"
+          v-if="article.comm_count"
+          :list="commentList"
+          @reply-click="onReply"
+        />
+        <!------------------------------------- /评论列表 --------------------------------->
         <!-- 底部区域 -->
         <div class="article-bottom">
-          <van-button class="comment-btn" type="default" round size="small">
+          <van-button
+            class="comment-btn"
+            type="default"
+            round
+            size="small"
+            @click="isPostShow = true"
+          >
             写评论
           </van-button>
-          <van-icon name="comment-o" info="123" color="#777" />
-          <!-- 收藏 -->
+          <van-icon name="comment-o" :info="article.comm_count" color="#777" />
+          <!------------- 收藏 ------------->
           <collect-article
             v-model="article.is_collected"
             :art_id="article.art_id"
           />
-          <!-- 点赞 -->
+          <!------------- 点赞 ------------->
           <like-article v-model="article.attitude" :art_id="article.art_id" />
           <!-- 转发 -->
           <van-icon name="share" color="#777777"></van-icon>
         </div>
         <!-- /底部区域 -->
+        <!-------------------------------------- 发布评论 ------------------------------------>
+        <van-popup v-model="isPostShow" position="bottom">
+          <comment-post
+            :target="article.art_id"
+            @post-success="onPostSuccess"
+            type="c"
+          />
+        </van-popup>
+        <!-------------------------------------/ 发布评论 ------------------------------------>
       </div>
       <!-- /加载完成-文章详情 -->
       <!-- 加载失败：404 -->
@@ -102,6 +122,19 @@
       </div>
       <!-- /加载失败：其它未知错误（例如网络原因或服务端异常） -->
     </div>
+    <!-------------------------------------- 回复评论 ------------------------------------>
+    <van-popup v-model="isReplyShow" position="bottom" style="height:100%;">
+      <comment-reply
+        v-if="isReplyShow"
+        :comment="currentComment"
+        @close="isReplyShow = false"
+      />
+      <!-- 问题: 每次打开评论回复弹层,内容不更新,始终是第一次的内容
+      原因: 弹层组件中的内容是懒渲染,默认打开一次后不会被销毁,只会频繁的 display: none/block; 导致组件不会被重新创建
+      解决: 给popup弹层中的组件添加v-if指令,强制让内容组件进行创建和销毁,内容就会更新了
+       -->
+    </van-popup>
+    <!-------------------------------------/ 回复评论 ------------------------------------>
   </div>
 </template>
 
@@ -112,6 +145,8 @@ import FollowUser from '@/components/follow-user'
 import CollectArticle from '@/components/collect-article'
 import LikeArticle from '@/components/like-article'
 import CommentList from './components/comment-list.vue'
+import CommentPost from './components/comment-post.vue'
+import CommentReply from './components/comment-reply.vue'
 
 // ImagePreview({
 //   // 预览的图片数组
@@ -128,7 +163,21 @@ import CommentList from './components/comment-list.vue'
 
 export default {
   name: 'ArticleIndex',
-  components: { FollowUser, CollectArticle, LikeArticle, CommentList },
+  components: {
+    FollowUser,
+    CollectArticle,
+    LikeArticle,
+    CommentList,
+    CommentPost,
+    CommentReply
+  },
+  // 给所有后代组件提供数据
+  // 注意: 不常用
+  provide: function() {
+    return {
+      articleId: this.articleId
+    }
+  },
   props: {
     // 使用props解耦获得了的动态路由数据，这样我们就可以使用this.articleId 获取动态路由数据 而不需要使用 this.$route.params.articleId
     // 解耦的好处: 文章组件可以独立使用,不需要依路由进行访问使用
@@ -141,7 +190,11 @@ export default {
     return {
       article: {}, // 文章详情对象
       loading: true, // 控制文章的加载状态,默认是true
-      errStatus: 0 // 错误的状态码
+      errStatus: 0, // 错误的状态码
+      isPostShow: false, // 控制发布弹层是否显示
+      commentList: [], // 评论列表数组\
+      isReplyShow: false, // 控制评论回复弹层是否显示
+      currentComment: {} // 存储每次点击回复的评论对象
     }
   },
   computed: {},
@@ -218,6 +271,21 @@ export default {
           })
         }
       })
+    },
+    // 处理子组件触发的评论成功事件
+    onPostSuccess(data) {
+      console.log(data)
+      // 关闭弹层
+      this.isPostShow = false
+      // 把最新的评论添加到列表的顶部
+      this.commentList.unshift(data)
+    },
+    // 处理点击回复的事件
+    onReply(comment) {
+      // console.log(comment)
+      this.currentComment = comment
+      // 显示评论回复弹层
+      this.isReplyShow = true
     }
   }
 }
